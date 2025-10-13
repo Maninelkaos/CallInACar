@@ -1,73 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Random Audio Player</title>
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: sans-serif;
-      text-align: center;
-      background: #111;
-      color: #fff;
-      margin: 0;
-    }
-    button {
-      background: #1db954;
-      color: white;
-      border: none;
-      border-radius: 9999px;
-      padding: 1em 2em;
-      font-size: 1.2em;
-      cursor: pointer;
-      margin-top: 1em;
-      transition: transform 0.2s ease;
-    }
-    button:hover {
-      transform: scale(1.05);
-    }
-  </style>
-</head>
-<body>
-  <h2 id="message">🎧 Tap to play audio</h2>
-  <button id="playButton">Play</button>
-  <audio id="player"></audio>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const group = params.get("group") || "1";
 
-  <script>
-    // Get the group number from the URL (?group=1 or ?group=2)
-    const params = new URLSearchParams(window.location.search);
-    const group = params.get("group") || "1";
+  const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBRAHIM_ENG.mp3"];
+  const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBRAHIM_FR.mp3"];
+  const audios = group === "2" ? group2 : group1;
 
-    // Define your two audio groups
-    const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBRAHIM_ENG.mp3"];
-    const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBRAHIM_FR.mp3"];
+  const random = audios[Math.floor(Math.random() * audios.length)];
 
-    // Select the correct group based on the URL parameter
-    const audios = group === "2" ? group2 : group1;
+  const player = document.getElementById("player");
+  const button = document.getElementById("playButton");
+  const message = document.getElementById("message");
 
-    // Randomly select one audio file from that group
-    const random = audios[Math.floor(Math.random() * audios.length)];
+  // Sequence of sounds
+  const callTone = new Audio("call_tone.mp3");
+  const answerClick = new Audio("answer_click.mp3");
+  const mainAudio = new Audio(random);
 
-    // Set up the audio player
-    const player = document.getElementById("player");
-    player.src = random;
+  button.addEventListener("click", () => {
+    message.textContent = "📞 Calling...";
+    button.style.display = "none";
 
-    const button = document.getElementById("playButton");
-    const message = document.getElementById("message");
+    // Play call tone first
+    callTone.play();
 
-    button.addEventListener("click", () => {
-      player.play().then(() => {
-        message.textContent = "▶ Playing your audio...";
-        button.style.display = "none";
-      }).catch(err => {
-        message.textContent = "⚠️ Error: " + err.message;
+    // After 3 seconds, stop the tone and play answer sound
+    setTimeout(() => {
+      callTone.pause();
+      callTone.currentTime = 0;
+      message.textContent = "📞 Connected...";
+      answerClick.play();
+
+      // When answer sound ends, play main audio
+      answerClick.addEventListener("ended", () => {
+        mainAudio.play().then(() => {
+          message.textContent = "▶ Playing message...";
+        });
       });
-    });
-  </script>
-</body>
-</html>
+    }, 10000); // 10000 seconds call tone
+  });
+</script>
