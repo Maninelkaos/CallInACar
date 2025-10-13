@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Audio Player</title>
+</head>
+<body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;text-align:center;">
+  <h2>🎧 Loading your audio...</h2>
+  <audio id="player" autoplay></audio>
+
+  <script>
+    // Parse the URL parameter "?group=1" or "?group=2"
+    const params = new URLSearchParams(window.location.search);
+    const group = params.get("group") || "1"; // default to group 1
+
+    // Define your two groups of audio
+    const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBAHIM_ENG.mp3"];
+    const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBAHIM_FR.mp3"];
+
+    // Pick the correct group
+    const audios = group === "2" ? group2 : group1;
+
+    // Choose one random audio from that group
+    const random = audios[Math.floor(Math.random() * audios.length)];
+
+    // Play it
+    const player = document.getElementById("player");
+    player.src = random;
+    player.play().catch(() => {
+      document.body.innerHTML = "<h2>▶ Tap to play audio</h2>";
+      document.body.onclick = () => player.play();
+    });
+  </script>
+</body>
+</html>
