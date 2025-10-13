@@ -34,7 +34,7 @@
   </style>
 </head>
 <body>
-  <h2 id="message">📞 Tap to call</h2>
+  <h2 id="message">🍉 Tap to call Gaza</h2>
   <button id="playButton">Call</button>
   <audio id="player"></audio>
   
@@ -58,7 +58,7 @@
   const mainAudio = new Audio(random);
 
   button.addEventListener("click", () => {
-    message.textContent = "📞 Calling...";
+    message.textContent = "🍉 Calling Gaza...";
     button.style.display = "none";
 
     // Play call tone first
@@ -68,13 +68,13 @@
     setTimeout(() => {
       callTone.pause();
       callTone.currentTime = 0;
-      message.textContent = "📞 Connected...";
+      message.textContent = "🍉 Connected to Gaza...";
       answerClick.play();
 
       // When answer sound ends, play main audio
       answerClick.addEventListener("ended", () => {
         mainAudio.play().then(() => {
-          message.textContent = "📞 Connected...";
+          message.textContent = "🍉 Connected to Gaza...";
         });
       });
     }, 10000); // 10000 seconds call tone
