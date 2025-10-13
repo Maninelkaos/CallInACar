@@ -4,32 +4,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Random Audio Player</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+      text-align: center;
+      background: #111;
+      color: #fff;
+      margin: 0;
+    }
+    button {
+      background: #1db954;
+      color: white;
+      border: none;
+      border-radius: 9999px;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-top: 1em;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
-<body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;text-align:center;">
-  <h2>🎧 Loading your audio...</h2>
-  <audio id="player" autoplay></audio>
+<body>
+  <h2 id="message">🎧 Tap to play audio</h2>
+  <button id="playButton">Play</button>
+  <audio id="player"></audio>
 
   <script>
-    // Parse the URL parameter "?group=1" or "?group=2"
+    // Get the group number from the URL (?group=1 or ?group=2)
     const params = new URLSearchParams(window.location.search);
-    const group = params.get("group") || "1"; // default to group 1
+    const group = params.get("group") || "1";
 
-    // Define your two groups of audio
+    // Define your two audio groups
     const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBAHIM_ENG.mp3"];
     const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBAHIM_FR.mp3"];
 
-    // Pick the correct group
+    // Select the correct group based on the URL parameter
     const audios = group === "2" ? group2 : group1;
 
-    // Choose one random audio from that group
+    // Randomly select one audio file from that group
     const random = audios[Math.floor(Math.random() * audios.length)];
 
-    // Play it
+    // Set up the audio player
     const player = document.getElementById("player");
     player.src = random;
-    player.play().catch(() => {
-      document.body.innerHTML = "<h2>▶ Tap to play audio</h2>";
-      document.body.onclick = () => player.play();
+
+    const button = document.getElementById("playButton");
+    const message = document.getElementById("message");
+
+    button.addEventListener("click", () => {
+      player.play().then(() => {
+        message.textContent = "▶ Playing your audio...";
+        button.style.display = "none";
+      }).catch(err => {
+        message.textContent = "⚠️ Error: " + err.message;
+      });
     });
   </script>
 </body>
