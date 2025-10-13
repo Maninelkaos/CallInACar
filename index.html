@@ -74,7 +74,7 @@
       // When answer sound ends, play main audio
       answerClick.addEventListener("ended", () => {
         mainAudio.play().then(() => {
-          message.textContent = "▶ Playing message...";
+          message.textContent = "📞 Connected...";
         });
       });
     }, 10000); // 10000 seconds call tone
