@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Call to Gaza</title>
   <style>
     body {
@@ -11,74 +11,121 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      font-family: sans-serif;
-      text-align: center;
+      margin: 0;
       background: #111;
       color: #fff;
-      margin: 0;
+      font-family: system-ui, sans-serif;
+      text-align: center;
     }
+
+    h2 {
+      margin-bottom: 1.5em;
+      font-size: 1.4em;
+    }
+
     button {
       background: #1db954;
       color: white;
       border: none;
       border-radius: 9999px;
-      padding: 1em 2em;
+      padding: 1em 2.5em;
       font-size: 1.2em;
       cursor: pointer;
-      margin-top: 1em;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, background 0.2s ease;
     }
+
     button:hover {
       transform: scale(1.05);
+      background: #1ed760;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
   <h2 id="message">🍉 Tap to call Gaza</h2>
   <button id="playButton">Call</button>
-  <audio id="player"></audio>
-  
+
   <script>
-  const params = new URLSearchParams(window.location.search);
-  const group = params.get("group") || "1";
+    const params = new URLSearchParams(window.location.search);
+    const group = params.get("group") || "1";
 
-  const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBRAHIM_ENG.mp3"];
-  const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBRAHIM_FR.mp3"];
-  const audios = group === "2" ? group2 : group1;
+    // Two language groups
+    const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBRAHIM_ENG.mp3"];
+    const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBRAHIM_FR.mp3"];
+    const audios = group === "2" ? group2 : group1;
 
-  const random = audios[Math.floor(Math.random() * audios.length)];
+    const random = audios[Math.floor(Math.random() * audios.length)];
+    const message = document.getElementById("message");
+    const button = document.getElementById("playButton");
 
-  const player = document.getElementById("player");
-  const button = document.getElementById("playButton");
-  const message = document.getElementById("message");
+    // Create audio elements
+    const callTone = new Audio("call_tone.mp3");
+    const answerClick = new Audio("answer_click.mp3");
+    const mainAudio = new Audio(random);
 
-  // Sequence of sounds
-  const callTone = new Audio("call_tone.mp3");
-  const answerClick = new Audio("answer_click.mp3");
-  const mainAudio = new Audio(random);
+    // Preload for smoother playback
+    callTone.preload = "auto";
+    answerClick.preload = "auto";
+    mainAudio.preload = "auto";
 
-  button.addEventListener("click", () => {
-    message.textContent = "🍉 Calling Gaza...";
-    button.style.display = "none";
+    // Ensure volume consistency
+    callTone.volume = 1.0;
+    answerClick.volume = 1.0;
+    mainAudio.volume = 1.0;
 
-    // Play call tone first
-    callTone.play();
+    // When the user clicks the button
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      message.textContent = "🍉 Calling Gaza...";
+      button.style.display = "none";
 
-    // After 3 seconds, stop the tone and play answer sound
-    setTimeout(() => {
-      callTone.pause();
-      callTone.currentTime = 0;
-      message.textContent = "🍉 Connected to Gaza...";
-      answerClick.play();
+      // Unlock all audio on user gesture (Safari/iOS fix)
+      const audiosToUnlock = [callTone, answerClick, mainAudio];
+      for (const a of audiosToUnlock) {
+        try {
+          await a.play();
+          a.pause();
+          a.currentTime = 0;
+        } catch (err) {
+          console.warn("Audio unlock failed:", err);
+        }
+      }
 
-      // When answer sound ends, play main audio
-      answerClick.addEventListener("ended", () => {
-        mainAudio.play().then(() => {
+      // Start the call sequence
+      try {
+        await callTone.play();
+
+        // After 10 seconds, stop tone and play next sounds
+        setTimeout(async () => {
+          callTone.pause();
+          callTone.currentTime = 0;
           message.textContent = "🍉 Connected to Gaza...";
-        });
-      });
-    }, 10000); // 10000 seconds call tone
-  });
-</script>
+
+          try {
+            await answerClick.play();
+          } catch (err) {
+            console.error("Answer click failed:", err);
+          }
+
+          answerClick.addEventListener("ended", async () => {
+            try {
+              await mainAudio.play();
+            } catch (err) {
+              console.error("Main audio failed:", err);
+            }
+          });
+        }, 10000); // 10 seconds tone
+      } catch (err) {
+        console.error("Call tone failed:", err);
+        message.textContent = "⚠️ Unable to play audio. Tap again.";
+        button.style.display = "inline-block";
+        button.disabled = false;
+      }
+    });
+  </script>
 </body>
 </html>
