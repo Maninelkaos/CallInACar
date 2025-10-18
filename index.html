@@ -17,12 +17,10 @@
       font-family: system-ui, sans-serif;
       text-align: center;
     }
-
     h2 {
       margin-bottom: 1.5em;
       font-size: 1.4em;
     }
-
     button {
       background: #1db954;
       color: white;
@@ -33,12 +31,10 @@
       cursor: pointer;
       transition: transform 0.2s ease, background 0.2s ease;
     }
-
     button:hover {
       transform: scale(1.05);
       background: #1ed760;
     }
-
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -53,78 +49,74 @@
     const params = new URLSearchParams(window.location.search);
     const group = params.get("group") || "1";
 
-    // Two language groups
     const group1 = ["LEEN_ENG.mp3", "ABDELKHARIM_ENG.mp3", "IBRAHIM_ENG.mp3"];
     const group2 = ["LEEN_FR.mp3", "ABDELKHARIM_FR.mp3", "IBRAHIM_FR.mp3"];
     const audios = group === "2" ? group2 : group1;
-
     const random = audios[Math.floor(Math.random() * audios.length)];
+
     const message = document.getElementById("message");
     const button = document.getElementById("playButton");
 
-    // Create audio elements
     const callTone = new Audio("call_tone.mp3");
     const answerClick = new Audio("answer_click.mp3");
     const mainAudio = new Audio(random);
 
-    // Preload for smoother playback
     callTone.preload = "auto";
     answerClick.preload = "auto";
     mainAudio.preload = "auto";
 
-    // Ensure volume consistency
     callTone.volume = 1.0;
     answerClick.volume = 1.0;
     mainAudio.volume = 1.0;
 
-    // When the user clicks the button
     button.addEventListener("click", async () => {
       button.disabled = true;
       message.textContent = "🍉 Calling Gaza...";
       button.style.display = "none";
 
-      // Unlock all audio on user gesture (Safari/iOS fix)
-      const audiosToUnlock = [callTone, answerClick, mainAudio];
-      for (const a of audiosToUnlock) {
-        try {
-          await a.play();
+      // Unlock all audios quickly (no awaits = faster & more reliable)
+      [callTone, answerClick, mainAudio].forEach(a => {
+        a.play().then(() => {
           a.pause();
           a.currentTime = 0;
+        }).catch(() => {});
+      });
+
+      // Wait a short moment to ensure everything’s unlocked
+      setTimeout(async () => {
+        try {
+          // Play the call tone for 10 seconds
+          await callTone.play();
+
+          setTimeout(() => {
+            callTone.pause();
+            callTone.currentTime = 0;
+            message.textContent = "🍉 Connected to Gaza...";
+
+            // Small delay between tone stop and click
+            setTimeout(async () => {
+              try {
+                await answerClick.play();
+              } catch (err) {
+                console.error("Click failed:", err);
+              }
+
+              answerClick.addEventListener("ended", async () => {
+                try {
+                  await mainAudio.play();
+                } catch (err) {
+                  console.error("Main audio failed:", err);
+                }
+              });
+            }, 200); // short delay before click (0.2s)
+          }, 10000); // 10 seconds call tone
         } catch (err) {
-          console.warn("Audio unlock failed:", err);
+          console.error("Tone failed:", err);
+          message.textContent = "⚠️ Unable to play audio. Tap again.";
+          button.style.display = "inline-block";
+          button.disabled = false;
         }
-      }
-
-      // Start the call sequence
-      try {
-        await callTone.play();
-
-        // After 10 seconds, stop tone and play next sounds
-        setTimeout(async () => {
-          callTone.pause();
-          callTone.currentTime = 0;
-          message.textContent = "🍉 Connected to Gaza...";
-
-          try {
-            await answerClick.play();
-          } catch (err) {
-            console.error("Answer click failed:", err);
-          }
-
-          answerClick.addEventListener("ended", async () => {
-            try {
-              await mainAudio.play();
-            } catch (err) {
-              console.error("Main audio failed:", err);
-            }
-          });
-        }, 10000); // 10 seconds tone
-      } catch (err) {
-        console.error("Call tone failed:", err);
-        message.textContent = "⚠️ Unable to play audio. Tap again.";
-        button.style.display = "inline-block";
-        button.disabled = false;
-      }
+      }, 300); // delay start after unlocking (300ms)
     });
   </script>
 </body>
